@@ -55,4 +55,12 @@ function classify(){
  document.getElementById('note').textContent='Учебный помощник: автоматический подсчёт слогов может ошибаться в редких словах. Сверяйте спорные случаи с правилами преподавателя.';
  document.getElementById('result').classList.add('show')
 }
-</script></body></html>
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js");
+  });
+}
+</script>
+</body></html>
