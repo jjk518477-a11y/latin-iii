@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#26354a">
+<title>III склонение — определитель</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#172033;background:#f3f5f8}
+*{box-sizing:border-box}
+body{margin:0;padding:18px;max-width:720px;margin-inline:auto}
+header{background:#26354a;color:white;padding:22px;border-radius:18px;margin-bottom:18px}
+h1{font-size:22px;margin:0 0 8px}
+header p{margin:0;color:#dbe5f2;font-size:14px;line-height:1.5}
+.card{background:white;border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 3px 14px #18243a12}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,select{width:100%;font-size:18px;padding:13px;border:1px solid #cbd3df;border-radius:10px;background:#fff}
+button{border:0;border-radius:11px;padding:13px 16px;font-size:16px;font-weight:700;cursor:pointer}
+.primary{background:#26354a;color:white;width:100%;margin-top:16px}
+.secondary{background:#e9eef5;color:#26354a;margin:5px 4px 0 0}
+#result{display:none;border-left:5px solid #2c7a55}
+#kind{font-size:20px;font-weight:800;margin:4px 0 10px}
+.muted{color:#596579;font-size:14px;line-height:1.55}
+.examples{display:flex;flex-wrap:wrap;gap:6px}
+.examples button{font-size:14px}
+footer{font-size:12px;color:#697386;line-height:1.5;padding:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>Определитель III склонения</h1>
+<p>Введите Nom. Sing. и Gen. Sing. Программа определит разновидность по правилам учебника.</p>
+</header>
+
+<section class="card">
+<label for="ns">Nom. Sing. (NS)</label>
+<input id="ns" autocomplete="off" placeholder="Например: index">
+<label for="gs">Gen. Sing. (GS)</label>
+<input id="gs" autocomplete="off" placeholder="Например: indicis">
+<label for="gender">Род существительного</label>
+<select id="gender">
+<option value="">Выберите род</option>
+<option value="m">m — мужской</option>
+<option value="f">f — женский</option>
+<option value="n">n — средний</option>
+</select>
+<button class="primary" onclick="determine()">Определить разновидность</button>
+</section>
+
+<section class="card" id="result" aria-live="polite">
+<div class="muted">Результат</div>
+<div id="kind"></div>
+<div id="forms" class="muted"></div>
+<p id="why"></p>
+<p id="caution" class="muted"></p>
+</section>
+
+<section class="card">
+<strong>Примеры для проверки</strong>
+<p class="muted">Нажмите на пример, чтобы заполнить формы автоматически.</p>
+<div class="examples">
+<button class="secondary" onclick="example('index','indicis','m')">index</button>
+<button class="secondary" onclick="example('atlas','atlantis','m')">atlas</button>
+<button class="secondary" onclick="example('pubes','pubis','f')">pubes</button>
+<button class="secondary" onclick="example('rete','retis','n')">rete</button>
+<button class="secondary" onclick="example('animal','animalis','n')">animal</button>
+<button class="secondary" onclick="example('exemplar','exemplaris','n')">exemplar</button>
+</div>
+</section>
+<footer>
+Важно: программа использует NS, GS и род, потому что по одной форме NS не всегда можно надёжно определить разновидность. Для исключений и спорных слов сверяйтесь со словарём и учебником.
+</footer>
+
+<script>
+const vowels = "aeiouy";
+
+function syllables(word) {
+  let count = 0, previous = false;
+  for (const ch of word.toLowerCase()) {
+    const current = vowels.includes(ch);
+    if (current && !previous) count++;
+    previous = current;
+  }
+  return count;
+}
+
+function determine() {
+  const ns = document.getElementById("ns").value.trim().toLowerCase();
+  const gs = document.getElementById("gs").value.trim().toLowerCase();
+  const gender = document.getElementById("gender").value;
+  const result = document.getElementById("result");
+  const kind = document.getElementById("kind");
+  const forms = document.getElementById("forms");
+  const why = document.getElementById("why");
+  const caution = document.getElementById("caution");
+
+  result.style.display = "block";
+  caution.textContent = "";
+
+  if (!ns || !gs || !gender) {
+    kind.textContent = "Заполните все поля";
+    forms.textContent = "";
+    why.textContent = "Нужны Nom. Sing., Gen. Sing. и род.";
+    return;
+  }
+  if (!gs.endsWith("is")) {
+    kind.textContent = "Проверьте форму Gen. Sing.";
+    forms.textContent = `NS: ${ns}; GS: ${gs}`;
+    why.textContent = "В III склонении окончание Gen. Sing. обычно -is.";
+    return;
+  }
+
+  const stem = gs.slice(0, -2);
+  const nNS = syllables(ns);
+  const nGS = syllables(gs);
+  let finalConsonants = 0;
+  for (let i = stem.length - 1; i >= 0; i--) {
+    if (!vowels.includes(stem[i])) finalConsonants++;
+    else break;
+  }
+
+  let category = "Нужно проверить вручную";
+  let explanation = "По этим формам программа не может уверенно определить разновидность. Проверьте словарную форму и исключения.";
+
+  // Гласная разновидность: существительные среднего рода на -e, -al, -ar.
+  if (gender === "n" && (ns.endsWith("e") || ns.endsWith("al") || ns.endsWith("ar"))) {
+    category = "Гласная разновидность";
+    explanation = `Существительное среднего рода; Nom. Sing. оканчивается на ${ns.endsWith("e") ? "-e" : ns.endsWith("al") ? "-al" : "-ar"}.`;
+  } else if (nNS === nGS && (ns.endsWith("es") || ns.endsWith("is"))) {
+    category = "Смешанная разновидность Б";
+    explanation = `Существительное равносложное: ${nNS} слога в NS и ${nGS} слога в GS; Nom. Sing. оканчивается на -es или -is.`;
+  } else if (nGS > nNS && finalConsonants >= 2) {
+    category = "Смешанная разновидность А";
+    explanation = `Существительное неравносложное: ${nNS} слога в NS и ${nGS} слога в GS; практическая основа ${stem}- оканчивается на два или более согласных.`;
+  } else if (nGS > nNS && finalConsonants === 1) {
+    category = "Согласная разновидность";
+    explanation = `Существительное неравносложное: ${nNS} слога в NS и ${nGS} слога в GS; практическая основа ${stem}- оканчивается на один согласный.`;
+  }
+
+  kind.textContent = category;
+  forms.textContent = `Словарная форма: ${ns}, ${gs}, ${gender}`;
+  why.textContent = explanation;
+  if (category === "Нужно проверить вручную") {
+    caution.textContent = "Не используйте автоматический ответ без проверки по учебнику.";
+  }
+}
+
+function example(ns, gs, gender) {
+  document.getElementById("ns").value = ns;
+  document.getElementById("gs").value = gs;
+  document.getElementById("gender").value = gender;
+  determine();
+}
+</script>
+</body>
+</html>

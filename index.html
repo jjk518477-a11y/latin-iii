@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#263b54"><link rel="manifest" href="manifest.webmanifest"><title>Latin III</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#202b38;font-family:Arial,sans-serif}
+header{background:#263b54;color:white;padding:25px 20px;border-radius:0 0 22px 22px}h1{margin:6px 0;font-size:26px}header p{margin:0;color:#dbe5ef}
+main{max-width:620px;margin:18px auto;padding:0 14px}.card{background:white;border:1px solid #dce3e9;border-radius:17px;padding:18px;margin:13px 0}
+h2{font-size:17px;color:#263b54;margin:0 0 12px}label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}
+input,select{width:100%;padding:13px;border:1px solid #cbd5df;border-radius:10px;font-size:17px;background:white}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{border:0;border-radius:11px;padding:13px;font-weight:bold;font-size:15px}
+.primary{width:100%;background:#263b54;color:white;margin-top:16px}.example{background:#e8eff7;color:#263b54;margin:4px}
+#result{display:none}#result.show{display:block}.type{font-size:20px;font-weight:bold;color:#263b54;margin:12px 0}
+.details{background:#f6f8fa;border-radius:11px;padding:13px;line-height:1.7;font-size:14px}.note{font-size:12px;color:#687587;line-height:1.5}
+@media(max-width:420px){.grid{grid-template-columns:1fr}}
+</style></head>
+<body><header><small>LATINA · III DECLINATIO</small><h1>Latin III</h1><p>Классификатор разновидностей III склонения</p></header>
+<main>
+<section class="card"><h2>Словарная форма</h2><div class="grid">
+<div><label>Nom. Sing.</label><input id="nom" placeholder="например, rex"></div>
+<div><label>Gen. Sing.</label><input id="gen" placeholder="например, regis"></div></div>
+<label>Род (Genus)</label><select id="gender"><option value="m">masculinum (m)</option><option value="f">femininum (f)</option><option value="n">neutrum (n)</option></select>
+<button class="primary" onclick="classify()">Определить разновидность</button></section>
+<section class="card" id="result"><div>Результат:</div><div class="type" id="type"></div><div class="details" id="details"></div><p class="note" id="note"></p></section>
+<section class="card"><h2>Примеры для проверки</h2>
+<button class="example" onclick="fill('rex','regis','m')">rex, regis</button>
+<button class="example" onclick="fill('atlas','atlantis','m')">atlas, atlantis</button>
+<button class="example" onclick="fill('pubes','pubis','f')">pubes, pubis</button>
+<button class="example" onclick="fill('rete','retis','n')">rete, retis</button>
+<p class="note">Нажмите на пример, затем на кнопку определения.</p></section>
+<section class="card"><h2>Краткие правила</h2>
+<p><b>Согласная разновидность:</b> неравносложное существительное; основа оканчивается на одну согласную.</p>
+<p><b>Смешанная разновидность А:</b> неравносложное существительное; основа оканчивается на две или более согласных.</p>
+<p><b>Смешанная разновидность Б:</b> равносложное существительное на -es или -is.</p>
+<p><b>Гласная разновидность:</b> существительное среднего рода на -e, -al или -ar в Nom. Sing.</p>
+<p class="note">Подсчёт слогов автоматический и приблизительный. Исключения и спорные формы сверяйте с учебником.</p></section>
+</main>
+<script>
+function clean(s){return s.trim().toLowerCase().replace(/[.,\s]/g,'')}
+function syllables(w){w=clean(w).replace(/qu/g,'q');let v=w.match(/[aeiouy]+/g)||[],n=0;for(let g of v){for(let i=0;i<g.length;){if(i+1<g.length&&['ae','oe','au','eu','ei','ui'].includes(g.slice(i,i+2)))i+=2;else i++;n++}}return n}
+function fill(n,g,s){document.getElementById('nom').value=n;document.getElementById('gen').value=g;document.getElementById('gender').value=s;document.getElementById('result').classList.remove('show')}
+function classify(){
+ let nom=clean(document.getElementById('nom').value),gen=clean(document.getElementById('gen').value),gender=document.getElementById('gender').value;
+ if(!nom||!gen){alert('Введите Nom. Sing. и Gen. Sing.');return}
+ if(!gen.endsWith('is')){alert('Введите Gen. Sing. с окончанием -is, например regis.');return}
+ let stem=gen.slice(0,-2),ns=syllables(nom),gs=syllables(gen),m=stem.match(/[bcdfghjklmnpqrstvwxyz]+$/),cons=m?m[0].length:0;
+ let ending=nom.endsWith('al')?'al':nom.endsWith('ar')?'ar':nom.endsWith('e')?'e':'';
+ let kind,why;
+ if(gender==='n'&&ending){kind='Гласная разновидность';why='Средний род; Nom. Sing. оканчивается на -'+ending+'.'}
+ else if(ns===gs&&/(es|is)$/.test(nom)){kind='Смешанная разновидность Б';why='Равносложное существительное ('+ns+' / '+gs+' сл.); Nom. Sing. оканчивается на -'+(nom.endsWith('es')?'es':'is')+'.'}
+ else if(ns!==gs&&cons>=2){kind='Смешанная разновидность А';why='Неравносложное существительное ('+ns+' / '+gs+' сл.); основа '+stem+'- оканчивается на '+cons+' согласных.'}
+ else if(ns!==gs&&cons===1){kind='Согласная разновидность';why='Неравносложное существительное ('+ns+' / '+gs+' сл.); основа '+stem+'- оканчивается на одну согласную.'}
+ else{kind='Не удалось однозначно определить';why='Слоги: '+ns+' / '+gs+'; основа: '+stem+'-. Проверьте слово и исключения в учебнике.'}
+ document.getElementById('type').textContent=kind;
+ document.getElementById('details').innerHTML='<b>Nom. Sing.:</b> '+nom+'<br><b>Gen. Sing.:</b> '+gen+'<br><b>Род:</b> '+gender+'<br><b>Основа:</b> '+stem+'-<br><b>Слоги:</b> '+ns+' / '+gs+'<br><br>'+why;
+ document.getElementById('note').textContent='Учебный помощник: автоматический подсчёт слогов может ошибаться в редких словах. Сверяйте спорные случаи с правилами преподавателя.';
+ document.getElementById('result').classList.add('show')
+}
+</script></body></html>
